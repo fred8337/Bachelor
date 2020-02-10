@@ -2,7 +2,7 @@ from ase import atoms
 from ase.io import read, write, iread
 import matplotlib.pyplot as plt
 import numpy as np
-from Learning import features
+import Learning
 from sklearn.cluster import KMeans
 from ase.visualize.plot import plot_atoms
 from ase.data.colors import jmol_colors
@@ -11,6 +11,9 @@ atomsite = iread("runs0/run0/structures.traj")
 energies = []
 dataSet = []
 
+energyClassifier = Learning.EnergyClassifier()
+
+
 ksis = [1, 2, 4]
 lambs = [1, -1]
 etas = [0.05, 2, 4, 8, 20, 40, 80]
@@ -18,26 +21,28 @@ angularEtas = [0.005]
 rss = [0]
 rc = 10
 # for i, atom in enumerate(atomsite, 0):
-#     if i%4 ==0:
-#         energies.append(atom.get_total_energy())
-#         point = features(atom, ksis, lambs, etas, angularEtas, rss, rc)
-#         dataSet.extend(point) # Denne linje tager MEGET lang
-#         print(i)
+#     # if i%4 ==0:
+#     energies.append(atom.get_total_energy())
+#     point = features(atom, ksis, lambs, etas, angularEtas, rss, rc)
+#     dataSet.extend(point) # Denne linje tager MEGET lang
+#     print(i)
 #     if i>400:
 #         break
 # np.save("DataSet", dataSet)
 data = np.load("DataSet.npy")
 print(data)
-kmeans = KMeans(n_clusters=5).fit(data)
+kmeans = energyClassifier.trainModel(data, 20)
 print(kmeans.labels_)
 
 atomS = 0
 for i,atom in enumerate(atomsite, 0):
-    if i == 418:
+    if i == 18:
         atomS = atom
-atomFeatures = features(atomS, ksis, lambs, etas, angularEtas, rss, rc)
+atomFeatures = energyClassifier.features(atomS, ksis, lambs, etas, angularEtas, rss, rc)
 colors = [jmol_colors[kmeans.predict(np.array(e).reshape(1, -1))].flatten() for e in atomFeatures]
 fig, ax = plt.subplots()
+plot_atoms(atomS, ax, radii=0.3, rotation=('45x, 45y, 45z'), colors=colors)
+plt.show()
 plot_atoms(atomS, ax, radii=0.3, rotation=('90x, 90y, 0z'), colors=colors)
 plt.show()
 # space = np.linspace(0, len(energies), len(energies))

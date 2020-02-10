@@ -8,8 +8,7 @@ from ase.data.colors import jmol_colors
 import matplotlib.colors as color
 import matplotlib.cm as cmx
 from ase.calculators.abinit import Abinit
-from mpi4py import MPI
-world = MPI.COMM_WORLD
+
 
 moleculesIterator = iread("runs0/run0/structures.traj")
 index = 419
