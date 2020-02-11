@@ -1,7 +1,7 @@
 import numpy as np
 from ase import Atoms
 from sklearn.cluster import KMeans
-
+import torch
 
 class EnergyClassifier:
     classifier = None
@@ -11,6 +11,8 @@ class EnergyClassifier:
     angularEtas = None
     rss = None
     rc = None
+    clusters = None
+    lambda_for_labels = None
     def __init__(self, classifier=None):
         self.classifier = classifier
 
@@ -54,19 +56,30 @@ class EnergyClassifier:
             self.rc = rc
         # A matrix of all distances
         distances = atoms.get_all_distances()
+        number_of_atoms = atoms.get_global_number_of_atoms()
+        number_of_features = 0
         # For storing the featurevectors
-        featureVectors = []
+        featureVectors = np.empty((number_of_atoms, 13)) #13 should be calculated from hyperparameters.
         for i, atom in enumerate(atoms, 0):
-            featureVectors.append(self.featureVector(i, atoms, ksis, lambs, etas, angularEtas, rss, rc, distances))
-        return featureVectors
+            featureVector = self.featureVector(i, atoms, ksis, lambs, etas, angularEtas, rss, rc, distances)
+            featureVectors[i] = featureVector
+        return featureVectors, number_of_features
 
-    def setHyperParameters(self, ksis=None, lambs=None, etas=None, angularEtas=None, rss=None, rc=None):
-        self.ksis = ksis
-        self.lambs = lambs
-        self.etas = etas
-        self.angularEtas = angularEtas
-        self.rss = rss
-        self.rc = rc
+    def setHyperParameters(self, ksis=None, lambs=None, etas=None, angularEtas=None, rss=None, rc=None, clusters=None):
+        if ksis is not None:
+            self.ksis = ksis
+        if lambs is not None:
+            self.lambs = lambs
+        if etas is not None:
+            self.etas = etas
+        if angularEtas is not None:
+            self.angularEtas = angularEtas
+        if rss is not None:
+            self.rss = rss
+        if rc is not None:
+            self.rc = rc
+        if clusters is not None:
+            self.clusters = clusters
 
     def featureVector(self, i, atoms, ksis, lambs, etas, angularEtas, rss, rc, distances):
         """ Building a feature vector for one atom, with index i the structure object atoms.
@@ -93,7 +106,7 @@ class EnergyClassifier:
         for eta in etas:
             for rs in rss:
                 result.append(self.radial(i, atoms, eta, rs, rc, distances))
-        return result
+        return np.array(result).reshape(1, -1)
 
     def fc(self, r, rc):
         """ Support function for building the feature vector. Used for constraining the range of interaction.
@@ -196,6 +209,7 @@ class EnergyClassifier:
         """
 
         kmeans = KMeans(n_clusters=clusters).fit(data)
+        self.clusters = clusters
         kmeans.fit(data)
         self.classifier = kmeans
         return kmeans
@@ -210,9 +224,49 @@ class EnergyClassifier:
         """
         if (self.ksis is None or self.lambs is None or self.etas is None or self.angularEtas is None or self.rss is None or self.rc is None):
             raise Exception("One or several hyperparameters are None, consider using setHyperParamaters for setting them.")
-        features = self.features(structure)
+        features, _ = self.features(structure)
         predictions = self.classifier.predict(features)
         result = []
-        for label in self.classifier.labels_:
+        for label in range(0, self.clusters):
             result.append(np.sum(np.where(predictions == label, 1, 0)))
+        return result
+
+    def featureVectors_to_clusterCountVector(self, featurevectors):
+        """ Returns a vector, counting the number of occurences for each cluster. DOES NOT WORK, RETURNS ONE HOT
+
+        Parameters
+        ----------
+        featurevector: ASE atoms object
+
+        """
+        if (self.ksis is None or self.lambs is None or self.etas is None or self.angularEtas is None or self.rss is None or self.rc is None):
+            raise Exception("One or several hyperparameters are None, consider using setHyperParamaters for setting them.")
+        features = featurevectors
+        predictions = self.classifier.predict(features)
+        result = []
+        for label in range(0, self.clusters):
+            result.append(np.sum(np.where(predictions == label, 1, 0)))
+        return result
+
+    def get_energy_labels(self, clusterCountVectors, energies, lamb_for_labels = None):
+        """ Returns a vector of the energy associated with each cluster.
+
+        Parameters
+        ----------
+        clusterCountVectors: a list of vectors, counting the number of atoms in each cluster for each structure with a known energy.
+        energies: List of energies from structures
+        lamb_for_labels: Hyperparameter.
+
+        """
+        X = torch.tensor(clusterCountVectors).double()
+        energies = torch.tensor(energies).reshape(-1, 1).double()
+        if lamb_for_labels is None:
+            lamb_for_labels = self.lambda_for_labels
+        XtX = torch.mm(X.t(), X)
+        XtX = (XtX+lamb_for_labels*torch.tensor(np.eye(XtX.size()[0])).double())
+        result = torch.mm(XtX.inverse(), X.t())
+        # print(result.size())
+        # print(energies.size())
+        result = torch.mm(result, energies)
+        result = sorted(enumerate(result), key=lambda x: x[1])
         return result
