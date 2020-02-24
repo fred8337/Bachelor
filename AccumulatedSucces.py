@@ -3,6 +3,7 @@ from ase.io import read, write, iread
 import matplotlib.pyplot as plt
 import numpy as np
 import Learning
+import pickle
 from sklearn.cluster import KMeans
 from ase.visualize.plot import plot_atoms
 from ase.data.colors import jmol_colors
@@ -22,35 +23,47 @@ angularEtas = [0.005]
 rss = [0]
 rc = 3
 energyClassifier.setHyperParameters(ksis, lambs, etas, angularEtas, rss, rc)
-# for i, atom in enumerate(atomsite, 0):
-#     # if i%4 ==0:
-#     energies.append(atom.get_total_energy())
-#     point, _ = energyClassifier.features(atom)
-#     dataSet.append(point) # Denne linje tager MEGET lang
-#     print(i)
-#     if i>400:
-#         break
+# for name in ["run0", "run1", "run2"]:
+#     for i, atom in enumerate(iread("runs0/run0/structures.traj"), 0):
+#         # if i%4 ==0:
+#         energies.append(atom.get_total_energy())
+#         point, _ = energyClassifier.features(atom)
+#         dataSet.append(point) # Denne linje tager MEGET lang
+#         print(i)
+#         if i>400:
+#             break
 # dataSet = np.array(dataSet)
 # np.save("DataSet", dataSet)
 data = np.load("DataSet.npy")
 trainingData = data.reshape(-1, 13)
 # print(data)
-kmeans = energyClassifier.trainModel(trainingData, 20)
+# kmeans = energyClassifier.trainModel(trainingData, 20)
+# pickle.dump(kmeans, open("save.pkl", "wb"))
+kmeans = pickle.load(open("save.pkl", "rb"))
+energyClassifier.set_clustering_model(kmeans)
 labels = kmeans.labels_
 print(labels)
 
 atomS = 0
 for i, atom in enumerate(atomsite, 0):
     if i <= 401:
-        energies.append(atom.get_total_energy())
+        # energies.append(atom.get_total_energy())
         dav = energyClassifier.featureVectors_to_clusterCountVector(data[i])
         clusterCounts.append(dav)
         # print(i)
     if i == 418:
         atomS = atom
+# np.save("Energies", energies)
+energies = np.load("Energies.npy")
 print(energyClassifier.structure_to_clusterCountVector(atomS))
 atomFeatures, _ = energyClassifier.features(atomS, ksis, lambs, etas, angularEtas, rss, rc)
-print(energyClassifier.get_energy_labels(clusterCountVectors=clusterCounts, energies=energies, lamb_for_labels=1.0))
+print("labels = "+str(kmeans.predict(atomFeatures)))
+energyLabels = energyClassifier.get_energy_labels(clusterCountVectors=clusterCounts, energies=energies, lamb_for_labels=1.0)
+space = np.linspace(0, len(energyLabels), len(energyLabels))
+plt.plot(space, [e[1] for e in energyLabels])
+plt.show()
+print(energyLabels)
+np.save("Energy_Labels", energyLabels)
 colors = [jmol_colors[kmeans.predict(np.array(e).reshape(1, -1))].flatten() for e in atomFeatures]
 fig, ax = plt.subplots()
 plot_atoms(atomS, ax, radii=0.3, rotation=('45x, 45y, 45z'), colors=colors)

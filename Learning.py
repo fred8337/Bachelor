@@ -56,8 +56,8 @@ class EnergyClassifier:
             self.rc = rc
         # A matrix of all distances
         distances = atoms.get_all_distances()
-        number_of_atoms = atoms.get_global_number_of_atoms()
-        number_of_features = 0
+        number_of_atoms = len(atoms)
+        number_of_features = len(ksis)*len(lambs)*len(angularEtas)+len(etas)*len(rss)
         # For storing the featurevectors
         featureVectors = np.empty((number_of_atoms, 13)) #13 should be calculated from hyperparameters.
         for i, atom in enumerate(atoms, 0):
@@ -144,6 +144,9 @@ class EnergyClassifier:
                 input = -0.999
             return np.arccos(input)
 
+        def Behler(phiijk, rij, rik, rjk):
+            return (2**(1-ksi))*(1-lamb*np.cos(phiijk))**ksi*np.exp(-eta*(rij**2+rik**2+rjk**2)/rc**2)*self.fc(rij, rc)*self.fc(rik, rc)*self.fc(rjk, rc)
+
         # For storing the resulting feature
         result = 0
         # Distances between atoms i,j and k
@@ -153,19 +156,22 @@ class EnergyClassifier:
         # Angle between j and k, centered on i
         phiijk = 0
         # The following should have if-checks (instead of fc returning 0) implemented for the sake of efficiancy, but this is form in the paper and it will do for now.
-        # (2**(1-ksi))*(1-lamb*np.cos(phijk))**ksi*np.exp(-eta*(rij**2+rik**2+rjk**2)/rc**2)*fc(rij, rc)*fc(rik, rc)*fc(rjk, rc)
-        number_of_atoms = atoms.get_global_number_of_atoms()
+        # (2**(1-ksi))*(1-lamb*np.cos(phijk))**ksi*np.exp(-eta*(rij**2+rik**2+rjk**2)/rc**2)*fc(rij, rc)*fc(rik, rc)*fc
+        def get_distances(i, j, k):
+            return (distances[i, j], distances[i, k], distances[j, k])
+
+        def getAtoms():
+            return len(atoms)
+        number_of_atoms = getAtoms()
         for j in range(0, number_of_atoms):
             if(i != j):
                 for k in range(0, number_of_atoms):
                     if(k != i and k != j):
-                        rij = distances[i, j]
-                        rik = distances[i, k]
-                        rjk = distances[j, k]
+                        rij, rik, rjk = get_distances(i, j, k)
                         if(rij<rc and rik<rc and rjk<rc):
                             phiijk = getAngle(rij, rik, rjk)
                             # phiijk = atoms.get
-                            result += (2**(1-ksi))*(1-lamb*np.cos(phiijk))**ksi*np.exp(-eta*(rij**2+rik**2+rjk**2)/rc**2)*self.fc(rij, rc)*self.fc(rik, rc)*self.fc(rjk, rc)
+                            result += Behler(phiijk, rij, rik, rjk)
                         else:
                             result += 0
         return result
@@ -186,7 +192,7 @@ class EnergyClassifier:
         result = 0
         # Distances between atoms i,j and k
         rij = 0
-        number_of_atoms = atoms.get_global_number_of_atoms()
+        number_of_atoms = len(atoms)
         for j in range(0, number_of_atoms):
             if(i != j):
                 rij = distances[i,j]
@@ -269,4 +275,8 @@ class EnergyClassifier:
         # print(energies.size())
         result = torch.mm(result, energies)
         result = sorted(enumerate(result), key=lambda x: x[1])
+        result = [(i, e.item()) for (i, e) in result]
         return result
+    def set_clustering_model(self, model):
+        self.classifier = model
+        self.clusters = len(model.cluster_centers_)
