@@ -204,6 +204,19 @@ class EnergyClassifier:
                     result += 0
         return result
 
+    def atomic(self, i, atoms, atomicLambda, rc):
+        """ An atomic feature function as per Behler and Parrinello. Returns an atomic feature vector.
+
+                Parameters
+                ----------
+                atoms: A structure object containing a list of atoms objects.
+                eta: Is chosen between 0.001 and 2 in the cited paper.
+                rs: HyperParameter. Unknown for now
+                rc: Cut-off radius. Interactions between atoms outside of this radius from the atom in question, will be neglected
+                distances: Matrix of distances between atoms.
+
+                """
+
     def trainModel(self, data, clusters):
         """ Trains a clustering algorithm, using K-means. Returns the kmeans object, and sets the classifier object.
             TO-DO: Train entire classifier
