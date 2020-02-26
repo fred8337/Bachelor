@@ -22,18 +22,19 @@ etas = [0.05, 2, 4, 8, 20, 40, 80]
 angularEtas = [0.005]
 rss = [0]
 rc = 3
-energyClassifier.setHyperParameters(ksis, lambs, etas, angularEtas, rss, rc)
-# for name in ["run0", "run1", "run2"]:
-#     for i, atom in enumerate(iread("runs0/run0/structures.traj"), 0):
-#         # if i%4 ==0:
-#         energies.append(atom.get_total_energy())
-#         point, _ = energyClassifier.features(atom)
-#         dataSet.append(point) # Denne linje tager MEGET lang
-#         print(i)
-#         if i>400:
-#             break
-# dataSet = np.array(dataSet)
-# np.save("DataSet", dataSet)
+atomicLambda = 1
+energyClassifier.setHyperParameters(ksis, lambs, etas, angularEtas, rss, atomicLambda, rc)
+for name in ["run0", "run1", "run2"]:
+    for i, atom in enumerate(iread("runs0/run0/structures.traj"), 0):
+        # if i%4 ==0:
+        energies.append(atom.get_total_energy())
+        point, _ = energyClassifier.features(atom)
+        dataSet.append(point) # Denne linje tager MEGET lang
+        print(i)
+        if i>400:
+            break
+dataSet = np.array(dataSet)
+np.save("DataSet", dataSet)
 data = np.load("DataSet.npy")
 trainingData = data.reshape(-1, 13)
 # print(data)

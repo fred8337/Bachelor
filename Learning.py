@@ -11,12 +11,13 @@ class EnergyClassifier:
     angularEtas = None
     rss = None
     rc = None
+    atomicLambda = None
     clusters = None
     lambda_for_labels = None
     def __init__(self, classifier=None):
         self.classifier = classifier
 
-    def features(self, atoms, ksis=None, lambs=None, etas=None, angularEtas=None, rss=None, rc=None):
+    def features(self, atoms, ksis=None, lambs=None, etas=None, angularEtas=None, rss=None, atomicLambda=None, rc=None, atomic=True):
         """ Builds feature vectors for every atom in the structure object atoms. Returns array of featurevectors in order of the appearence in the structure objects.
 
                 Parameters
@@ -50,6 +51,8 @@ class EnergyClassifier:
             rss = self.rss
         else:
             self.rss = rss
+        if atomicLambda is None:
+            atomicLambda = self.atomicLambda
         if rc is None:
             rc = self.rc
         else:
@@ -58,14 +61,18 @@ class EnergyClassifier:
         distances = atoms.get_all_distances()
         number_of_atoms = len(atoms)
         number_of_features = len(ksis)*len(lambs)*len(angularEtas)+len(etas)*len(rss)
+        aNumbers = atoms.get_atomic_numbers()
+        atomic_numbers = dict(zip(np.arange(number_of_atoms), aNumbers))
+        if atomic:
+            number_of_features += len(list(np.unique(aNumbers)))+1
         # For storing the featurevectors
-        featureVectors = np.empty((number_of_atoms, 13)) #13 should be calculated from hyperparameters.
+        featureVectors = np.empty((number_of_atoms, number_of_features))
         for i, atom in enumerate(atoms, 0):
-            featureVector = self.featureVector(i, atoms, ksis, lambs, etas, angularEtas, rss, rc, distances)
+            featureVector = self.featureVector(i, atoms, ksis, lambs, etas, angularEtas, rss, atomicLambda, rc, distances, atomic_numbers)
             featureVectors[i] = featureVector
         return featureVectors, number_of_features
 
-    def setHyperParameters(self, ksis=None, lambs=None, etas=None, angularEtas=None, rss=None, rc=None, clusters=None):
+    def setHyperParameters(self, ksis=None, lambs=None, etas=None, angularEtas=None, rss=None, atomicLambda=None, rc=None, clusters=None):
         if ksis is not None:
             self.ksis = ksis
         if lambs is not None:
@@ -78,10 +85,12 @@ class EnergyClassifier:
             self.rss = rss
         if rc is not None:
             self.rc = rc
+        if atomicLambda is not None:
+            self.atomicLambda = atomicLambda
         if clusters is not None:
             self.clusters = clusters
 
-    def featureVector(self, i, atoms, ksis, lambs, etas, angularEtas, rss, rc, distances):
+    def featureVector(self, i, atoms, ksis, lambs, etas, angularEtas, rss, atomiclambda, rc, distances, atomic_numbers):
         """ Building a feature vector for one atom, with index i the structure object atoms.
 
             Parameters
@@ -106,6 +115,10 @@ class EnergyClassifier:
         for eta in etas:
             for rs in rss:
                 result.append(self.radial(i, atoms, eta, rs, rc, distances))
+        result.append(atomic_numbers[i])
+        numbers_to_iterate = np.unique(list(atomic_numbers.values()))
+        for atomic_number in numbers_to_iterate:
+            result.append(self.atomic(i, atomic_number, atoms, atomiclambda, rc, distances, atomic_numbers))
         return np.array(result).reshape(1, -1)
 
     def fc(self, r, rc):
@@ -126,6 +139,7 @@ class EnergyClassifier:
 
         Parameters
         ----------
+        i: Index of the current atom
         atoms: A structure object containing a list of atoms objects.
         ksi: HyperParameter, should be chosen as 1, 2, 4, 16, 64 ..
         lamb: HyperParameter, should be chosen as -1, 1.
@@ -181,6 +195,7 @@ class EnergyClassifier:
 
         Parameters
         ----------
+        i: Index of the current atom
         atoms: A structure object containing a list of atoms objects.
         eta: Is chosen between 0.001 and 2 in the cited paper.
         rs: HyperParameter. Unknown for now
@@ -196,7 +211,7 @@ class EnergyClassifier:
         for j in range(0, number_of_atoms):
             if(i != j):
                 rij = distances[i,j]
-                if(rij<rc):
+                if(rij < rc):
                     # The following should have if-checks implemented for the sake of efficiency,
                     # but this is form in the paper and it will do for now.
                     result += np.exp(-eta * (rij ** 2 - rs ** 2) / rc ** 2) * self.fc(rij, rc)
@@ -204,18 +219,30 @@ class EnergyClassifier:
                     result += 0
         return result
 
-    def atomic(self, i, atoms, atomicLambda, rc):
+    def atomic(self, i, atomic_number, atoms, atomicLambda, rc, distances, atomic_numbers):
         """ An atomic feature function as per Behler and Parrinello. Returns an atomic feature vector.
 
                 Parameters
                 ----------
+                i: Index of the current atom
+                atomic_number: The atomic number of the current atom.
                 atoms: A structure object containing a list of atoms objects.
-                eta: Is chosen between 0.001 and 2 in the cited paper.
-                rs: HyperParameter. Unknown for now
+                atomicLambda: Hyper Parameter
                 rc: Cut-off radius. Interactions between atoms outside of this radius from the atom in question, will be neglected
                 distances: Matrix of distances between atoms.
 
                 """
+        result = 0
+        number_of_atoms = len(atoms)
+        for j in range(number_of_atoms):
+            if(atomic_number == atomic_numbers[j]):
+                if(i!=j):
+                    rij = distances[i, j]
+                    if(rij < rc):
+                        result += np.exp(-rij/atomicLambda)*self.fc(rij, rc)
+                    else:
+                        result += 0
+        return result
 
     def trainModel(self, data, clusters):
         """ Trains a clustering algorithm, using K-means. Returns the kmeans object, and sets the classifier object.
