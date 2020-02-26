@@ -24,22 +24,22 @@ rss = [0]
 rc = 3
 atomicLambda = 1
 energyClassifier.setHyperParameters(ksis, lambs, etas, angularEtas, rss, atomicLambda, rc)
-for name in ["run0", "run1", "run2"]:
-    for i, atom in enumerate(iread("runs0/run0/structures.traj"), 0):
-        # if i%4 ==0:
-        energies.append(atom.get_total_energy())
-        point, _ = energyClassifier.features(atom)
-        dataSet.append(point) # Denne linje tager MEGET lang
-        print(i)
-        if i>400:
-            break
-dataSet = np.array(dataSet)
-np.save("DataSet", dataSet)
+# for name in ["run0", "run1", "run2"]:
+#     for i, atom in enumerate(iread("runs0/run0/structures.traj"), 0):
+#         # if i%4 ==0:
+#         energies.append(atom.get_total_energy())
+#         point, _ = energyClassifier.features(atom)
+#         dataSet.append(point) # Denne linje tager MEGET lang
+#         print(i)
+#         if i>400:
+#             break
+# dataSet = np.array(dataSet)
+# np.save("DataSet", dataSet)
 data = np.load("DataSet.npy")
-trainingData = data.reshape(-1, 13)
-# print(data)
-# kmeans = energyClassifier.trainModel(trainingData, 20)
-# pickle.dump(kmeans, open("save.pkl", "wb"))
+trainingData = data.reshape(-1, 16)
+print(data)
+kmeans = energyClassifier.trainModel(trainingData, 20)
+pickle.dump(kmeans, open("save.pkl", "wb"))
 kmeans = pickle.load(open("save.pkl", "rb"))
 energyClassifier.set_clustering_model(kmeans)
 labels = kmeans.labels_
