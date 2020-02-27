@@ -1,0 +1,102 @@
+Geometry = GenFormat {
+27  S
+Ti   O
+1      1      0.000000000000001      1.967940000000001      6.359735683000000
+2      2      0.000000000000000      0.000000000000000      6.000000000000001
+3      2      1.967940000000001      1.967940000000001      6.719471366000001
+4      1      0.000000000000001      5.903820000000001      6.359735683000000
+5      2      0.000000000000001      3.935880000000000      6.000000000000001
+6      2      1.967940000000002      5.903820000000001      6.719471366000001
+7      1      0.000000000000001      9.839700000000002      6.359735683000000
+8      2      0.000000000000001      7.871759999999999      6.000000000000001
+9      2      1.967940000000002      9.839700000000002      6.719471366000001
+10     1      0.000000000000001     13.775580000000000      6.359735683000000
+11     2      0.000000000000001     11.807639999999999      6.000000000000001
+12     2      1.967940000000002     13.775580000000000      6.719471366000001
+13     2      1.937437488488372     14.373624606172088     10.147344351189655
+14     2      0.002632796866555      9.654432104114690      8.344971099611438
+15     2      1.960929866973232     11.444607478045429      9.306752923800326
+16     1      1.969543824319518      9.663203449462955      8.622186216205899
+17     2      2.018915044575892      1.461266148274389     10.317061052411459
+18     1      0.138004706252357      1.142318813759210     10.608738052994379
+19     1      1.952580875844687      6.133618313609460      8.686713771565691
+20     1      1.972862707727180      2.543373030088425      8.641171780828362
+21     2      1.951947058685833      7.948929556158165      9.466788468116500
+22     2      0.186114940816289      4.804451469725501     11.293446087957859
+23     2      3.929918679223218     13.404783252063350      8.306269380616522
+24     2      3.928435302981693      2.261605528070689      8.364336043180398
+25     2      3.930267640920079      6.265649954057839      8.320555839602333
+26     1      1.960414767443598     13.224881584287969      8.666007552757357
+27     2      1.984234342997278      4.287053202140003      9.211473692423448
+0.000000000000000      0.000000000000000      0.000000000000000
+3.935880000000000      0.000000000000000      0.000000000000000
+0.000000000000001     15.743520000000000      0.000000000000000
+0.000000000000001      0.000000000000001     25.000000000000000
+}
+Driver = ConjugateGradient {
+  MaxForceComponent = 1E-4
+  MaxSteps = 0
+  LatticeOpt = No
+  MovedAtoms = "1:-1"
+  OutputPrefix = "geo_end"
+  AppendGeometries = No
+  ConvergentForcesOnly = Yes
+  Constraints = {}
+}
+Hamiltonian = DFTB {
+  Charge = 0.000000
+  Filling = Fermi {
+    Temperature [Kelvin] = 0.000000
+    IndependentKFilling = No
+  }
+  KPointsAndWeights = SupercellFolding {
+2 0 0
+0 1 0
+0 0 1
+0.5 0.0 0.0
+  }
+  MaxAngularMomentum = {
+    O = "p"
+    Ti = "d"
+  }
+  SCC = No
+  SlaterKosterFiles = Type2FileNames {
+    Prefix = /home/mkb/DFT/dftb_parameters/tiorg/
+    Separator = "-"
+    Suffix = ".skf"
+    LowerCaseTypeName = No
+  }
+  PolynomialRepulsive = {}
+  OldRepulsiveSum = No
+  OrbitalResolvedSCC = No
+  OldSKInterpolation = No
+  Eigensolver = DivideAndConquer {}
+  Dispersion = {}
+  ThirdOrder = No
+  ThirdOrderFull = No
+}
+Options = {
+  WriteResultsTag = Yes
+  MullikenAnalysis = No
+  WriteEigenvectors = No
+  WriteAutotestTag = No
+  WriteDetailedXML = No
+  WriteDetailedOut = Yes
+  WriteBandOut = Yes
+  AtomResolvedEnergies = No
+  RandomSeed = 0
+  WriteHS = No
+  WriteRealHS = No
+  MinimiseMemoryUsage = No
+  ShowFoldedCoords = No
+}
+ParserOptions = {
+  IgnoreUnprocessedNodes = Yes
+  ParserVersion = 4
+  WriteHSDInput = Yes
+  WriteXMLInput = No
+  StopAfterParsing = No
+}
+Analysis = {
+  ProjectStates = {}
+}

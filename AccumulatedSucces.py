@@ -21,16 +21,16 @@ lambs = [1, -1]
 etas = [0.05, 2, 4, 8, 20, 40, 80]
 angularEtas = [0.005]
 rss = [0]
-rc = 3
+rc = 11.9
 atomicLambda = 1
 energyClassifier.setHyperParameters(ksis, lambs, etas, angularEtas, rss, atomicLambda, rc)
-# for name in ["run0", "run1", "run2"]:
-#     for i, atom in enumerate(iread("runs0/run0/structures.traj"), 0):
-#         # if i%4 ==0:
-#         energies.append(atom.get_total_energy())
-#         point, _ = energyClassifier.features(atom)
-#         dataSet.append(point) # Denne linje tager MEGET lang
-#         print(i)
+# for name in range(10):
+#     for i, atom in enumerate(iread("BestProb/"+"run"+str(name)+"/structures.traj"), 0):
+#         if i%10 ==0:
+#             energies.append(atom.get_total_energy())
+#             point, _ = energyClassifier.features(atom)
+#             dataSet.append(point) # Denne linje tager MEGET lang
+#             print(i)
 #         if i>400:
 #             break
 # dataSet = np.array(dataSet)
@@ -47,13 +47,15 @@ print(labels)
 
 atomS = 0
 for i, atom in enumerate(atomsite, 0):
-    if i <= 401:
-        # energies.append(atom.get_total_energy())
-        dav = energyClassifier.featureVectors_to_clusterCountVector(data[i])
-        clusterCounts.append(dav)
-        # print(i)
+    # if i <= 401:
+    #     # energies.append(atom.get_total_energy())
+    #     dav = energyClassifier.featureVectors_to_clusterCountVector(data[i])
+    #     clusterCounts.append(dav)
+    #     # print(i)
     if i == 418:
         atomS = atom
+for i in range(len(data)):
+    clusterCounts.append(energyClassifier.featureVectors_to_clusterCountVector(data[i]))
 # np.save("Energies", energies)
 energies = np.load("Energies.npy")
 print(energyClassifier.structure_to_clusterCountVector(atomS))
