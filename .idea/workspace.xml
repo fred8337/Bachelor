@@ -2,13 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d59f810f-7f1e-4a93-add5-479a24e8ee07" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Bachelor.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Bachelor.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AccumulatedSucces.py" beforeDir="false" afterPath="$PROJECT_DIR$/AccumulatedSucces.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Energy_Labels2.npy" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Learning.py" beforeDir="false" afterPath="$PROJECT_DIR$/Learning.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/save2.pkl" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +166,7 @@
       <workItem from="1582990895122" duration="250000" />
       <workItem from="1582991154803" duration="1340000" />
       <workItem from="1582993811178" duration="607000" />
-      <workItem from="1583056261496" duration="4039000" />
+      <workItem from="1583056261496" duration="5330000" />
     </task>
     <servers />
   </component>

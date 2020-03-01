@@ -279,7 +279,7 @@ class EnergyClassifier:
         return result
 
     def featureVectors_to_clusterCountVector(self, featurevectors):
-        """ Returns a vector, counting the number of occurences for each cluster. DOES NOT WORK, RETURNS ONE HOT
+        """ Returns a vector, counting the number of occurences for each cluster.
 
         Parameters
         ----------
@@ -288,8 +288,8 @@ class EnergyClassifier:
         """
         if (self.ksis is None or self.lambs is None or self.etas is None or self.angularEtas is None or self.rss is None or self.rc is None):
             raise Exception("One or several hyperparameters are None, consider using setHyperParamaters for setting them.")
-        features = featurevectors
-        predictions = self.classifier.predict(features)
+
+        predictions = self.classifier.predict(featurevectors)
         result = []
         for label in range(0, self.clusters):
             result.append(np.sum(np.where(predictions == label, 1, 0)))
