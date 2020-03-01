@@ -322,3 +322,4 @@ class EnergyClassifier:
     def set_clustering_model(self, model):
         self.classifier = model
         self.clusters = len(model.cluster_centers_)
+        return model
