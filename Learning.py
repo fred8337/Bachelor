@@ -14,6 +14,7 @@ class EnergyClassifier:
     atomicLambda = None
     clusters = None
     lambda_for_labels = None
+    energy_labels = None
     def __init__(self, classifier=None):
         self.classifier = classifier
 
@@ -316,6 +317,7 @@ class EnergyClassifier:
         result = torch.mm(result, energies)
         result = sorted(enumerate(result), key=lambda x: x[1])
         result = [(i, e.item()) for (i, e) in result]
+        self.energy_labels = result
         return result
     def set_clustering_model(self, model):
         self.classifier = model
