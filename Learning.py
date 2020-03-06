@@ -1,6 +1,7 @@
 import numpy as np
 from ase import Atoms
 from sklearn.cluster import KMeans
+from sklearn import linear_model
 import torch
 
 class EnergyClassifier:
@@ -319,6 +320,25 @@ class EnergyClassifier:
         result = [(i, e.item()) for (i, e) in result]
         self.energy_labels = result
         return result
+    def get_energy_labels2(self, clusterCountVectors, energies, weights, lamb_for_labels = None):
+        """ Returns a vector of the energy associated with each cluster.
+
+                Parameters
+                ----------
+                clusterCountVectors: a list of vectors, counting the number of atoms in each cluster for each structure with a known energy.
+                energies: List of energies from structures
+                lamb_for_labels: Hyperparameter.
+
+                """
+        reg = linear_model.Ridge(alpha=lamb_for_labels, solver='lsqr', fit_intercept=False)
+        reg.fit(clusterCountVectors, energies, weights)
+        result = reg.coef_
+        print(result)
+        result = sorted(enumerate(result), key=lambda x: x[1])
+        result = [(i, e.item()) for (i, e) in result]
+        self.energy_labels = result
+        return result
+
     def set_clustering_model(self, model):
         self.classifier = model
         self.clusters = len(model.cluster_centers_)

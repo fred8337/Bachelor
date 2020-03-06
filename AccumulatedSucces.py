@@ -24,26 +24,26 @@ rss = [0]
 rc = 3
 atomicLambda = 1
 energyClassifier.setHyperParameters(ksis, lambs, etas, angularEtas, rss, atomicLambda, rc)
-for name in range(10):
-    for i, atom in enumerate(iread("BestProb/"+"run"+str(name)+"/structures.traj"), 0):
-        if i%10 ==0:
-            energies.append(atom.get_total_energy())
-            point, _ = energyClassifier.features(atom)
-            dataSet.append(point) # Denne linje tager MEGET lang
-            print(i)
-        if i>400:
-            break
+# for name in range(10):
+#     for i, atom in enumerate(iread("BestProb/"+"run"+str(name)+"/structures.traj"), 0):
+#         if i%10 ==0:
+#             energies.append(atom.get_total_energy())
+#             point, _ = energyClassifier.features(atom)
+#             dataSet.append(point) # Denne linje tager MEGET lang
+#             print(i)
+#         if i>400:
+#             break
 # dataSet = np.array(dataSet)
 # np.save("DataSet", dataSet)
 data = np.load("DataSet.npy")
 trainingData = data.reshape(-1, 16)
-print(data)
+# print(data)
 kmeans = energyClassifier.trainModel(trainingData, 20)
 pickle.dump(kmeans, open("save.pkl", "wb"))
 kmeans = pickle.load(open("save.pkl", "rb"))
 energyClassifier.set_clustering_model(kmeans)
 labels = kmeans.labels_
-print(labels)
+# print(labels)
 
 atomS = 0
 for i, atom in enumerate(atomsite, 0):
@@ -58,14 +58,17 @@ for i in range(len(data)):
     clusterCounts.append(energyClassifier.featureVectors_to_clusterCountVector(data[i]))
 # np.save("Energies", energies)
 energies = np.load("Energies.npy")
-print(energyClassifier.structure_to_clusterCountVector(atomS))
+# print(energies)
+# print(energyClassifier.structure_to_clusterCountVector(atomS))
 atomFeatures, _ = energyClassifier.features(atomS, ksis, lambs, etas, angularEtas, rss, rc)
 print("labels = "+str(kmeans.predict(atomFeatures)))
-energyLabels = energyClassifier.get_energy_labels(clusterCountVectors=clusterCounts, energies=energies, lamb_for_labels=1.0)
+energyLabels = energyClassifier.get_energy_labels2(clusterCountVectors=clusterCounts, energies=energies, weights=np.ones(np.shape(energies)), lamb_for_labels=1.0)
 space = np.linspace(0, len(energyLabels), len(energyLabels))
 plt.plot(space, [e[1] for e in energyLabels])
 plt.show()
 print(energyLabels)
+energyLabels = energyClassifier.get_energy_labels(clusterCountVectors=clusterCounts, energies=energies, lamb_for_labels=1.0)
+
 np.save("Energy_Labels", energyLabels)
 colors = [jmol_colors[kmeans.predict(np.array(e).reshape(1, -1))].flatten() for e in atomFeatures]
 fig, ax = plt.subplots()
